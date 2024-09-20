@@ -6,44 +6,29 @@ namespace Raketa\BackendTestTask\Controller;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Raketa\BackendTestTask\Repository\CartManager;
+use Raketa\BackendTestTask\Domain\Customer;
+use Raketa\BackendTestTask\Exception\UseCase\UseCaseException;
+use Raketa\BackendTestTask\UseCase\GetCart\GetCartUseCase;
 use Raketa\BackendTestTask\View\CartView;
 
-readonly class GetCartController
+final readonly class GetCartController extends AbstractJsonController
 {
     public function __construct(
-        public CartView $cartView,
-        public CartManager $cartManager
+        public GetCartUseCase $getCartUseCase,
+        public Customer $customer,
     ) {
     }
 
     public function get(RequestInterface $request): ResponseInterface
     {
-        $response = new JsonResponse();
-        $cart = $this->cartManager->getCart();
-
-        if (! $cart) {
-            $response->getBody()->write(
-                json_encode(
-                    ['message' => 'Cart not found'],
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
-                )
-            );
-
-            return $response
-                ->withHeader('Content-Type', 'application/json; charset=utf-8')
-                ->withStatus(404);
-        } else {
-            $response->getBody()->write(
-                json_encode(
-                    $this->cartView->toArray($cart),
-                    JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
-                )
-            );
+        try {
+            $cartDto = $this->getCartUseCase->execute($this->customer);
+        } catch (UseCaseException $e) {
+            return $this->jsonResponseError($e->getMessage());
         }
 
-        return $response
-            ->withHeader('Content-Type', 'application/json; charset=utf-8')
-            ->withStatus(404);
+        $view = new CartView($cartDto);
+
+        return $this->jsonResponseOk($view->toArray());
     }
 }

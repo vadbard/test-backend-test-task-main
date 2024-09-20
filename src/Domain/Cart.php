@@ -4,13 +4,15 @@ declare(strict_types = 1);
 
 namespace Raketa\BackendTestTask\Domain;
 
+use Raketa\BackendTestTask\Enum\PaymentMethodEnum;
+
 final class Cart
 {
     public function __construct(
         readonly private string $uuid,
         readonly private Customer $customer,
-        readonly private string $paymentMethod,
-        private array $items,
+        readonly private PaymentMethodEnum $paymentMethod = PaymentMethodEnum::PayPal,
+        private array $items = [],
     ) {
     }
 
@@ -24,11 +26,14 @@ final class Cart
         return $this->customer;
     }
 
-    public function getPaymentMethod(): string
+    public function getPaymentMethod(): PaymentMethodEnum
     {
         return $this->paymentMethod;
     }
 
+    /**
+     * @return CartItem[]
+     */
     public function getItems(): array
     {
         return $this->items;

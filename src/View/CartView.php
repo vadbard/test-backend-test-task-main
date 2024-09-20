@@ -4,55 +4,46 @@ declare(strict_types = 1);
 
 namespace Raketa\BackendTestTask\View;
 
-use Raketa\BackendTestTask\Domain\Cart;
-use Raketa\BackendTestTask\Repository\ProductRepository;
+use Raketa\BackendTestTask\UseCase\GetCart\OutputDto\CartDto;
+use Raketa\BackendTestTask\View\Traits\ViewHelperTrait;
 
-readonly class CartView
+final readonly class CartView
 {
-    public function __construct(
-        private ProductRepository $productRepository
-    ) {
+    use ViewHelperTrait;
+
+    public function __construct(private CartDto $dto)
+    {
     }
 
-    public function toArray(Cart $cart): array
+    public function toArray(): array
     {
-        $data = [
-            'uuid' => $cart->getUuid(),
-            'customer' => [
-                'id' => $cart->getCustomer()->getId(),
-                'name' => implode(' ', [
-                    $cart->getCustomer()->getLastName(),
-                    $cart->getCustomer()->getFirstName(),
-                    $cart->getCustomer()->getMiddleName(),
-                ]),
-                'email' => $cart->getCustomer()->getEmail(),
-            ],
-            'payment_method' => $cart->getPaymentMethod(),
-        ];
-
-        $total = 0;
-        $data['items'] = [];
-        foreach ($cart->getItems() as $item) {
-            $total += $item->getPrice() * $item->getQuantity();
-            $product = $this->productRepository->getByUuid($item->getProductUuid());
-
-            $data['items'][] = [
-                'uuid' => $item->getUuid(),
-                'price' => $item->getPrice(),
-                'total' => $total,
-                'quantity' => $item->getQuantity(),
+        $items = [];
+        foreach ($this->dto->itemDtos as $item) {
+            $items[] = [
+                'uuid' => $item->uuid,
+                'price' => $this->makePriceFloat($item->price),
+                'quantity' => $item->quantity,
+                'total' => $this->makePriceFloat($item->total),
                 'product' => [
-                    'id' => $product->getId(),
-                    'uuid' => $product->getUuid(),
-                    'name' => $product->getName(),
-                    'thumbnail' => $product->getThumbnail(),
-                    'price' => $product->getPrice(),
+                    'id' => $item->productDto->id,
+                    'uuid' => $item->productDto->uuid,
+                    'name' => $item->productDto->name,
+                    'thumbnail' => $item->productDto->thumbnail,
+                    'price' => $this->makePriceFloat($item->productDto->price),
                 ],
             ];
         }
 
-        $data['total'] = $total;
-
-        return $data;
+        return [
+            'uuid' => $this->dto->uuid,
+            'customer' => [
+                'id' => $this->dto->customerDto->id,
+                'name' => $this->dto->customerDto->fullName,
+                'email' => $this->dto->customerDto->email,
+            ],
+            'payment_method' => $this->dto->paymentMethod->value,
+            'items' => $items,
+            'total' => $this->makePriceFloat($this->dto->total),
+        ];
     }
 }

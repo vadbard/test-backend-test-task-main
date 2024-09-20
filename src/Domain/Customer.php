@@ -35,6 +35,15 @@ final readonly class Customer
         return $this->middleName;
     }
 
+    public function getFullName(): string
+    {
+        return implode(' ', [
+            $this->getLastName(),
+            $this->getFirstName(),
+            $this->getMiddleName(),
+        ]);
+    }
+
     public function getEmail(): string
     {
         return $this->email;

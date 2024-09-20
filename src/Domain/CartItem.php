@@ -7,10 +7,10 @@ namespace Raketa\BackendTestTask\Domain;
 final readonly class CartItem
 {
     public function __construct(
-        public string $uuid,
-        public string $productUuid,
-        public float $price,
-        public int $quantity,
+        private string $uuid,
+        private Product $product,
+        private int $price,
+        private int $quantity,
     ) {
     }
 
@@ -19,12 +19,12 @@ final readonly class CartItem
         return $this->uuid;
     }
 
-    public function getProductUuid(): string
+    public function getProduct(): Product
     {
-        return $this->productUuid;
+        return $this->product;
     }
 
-    public function getPrice(): float
+    public function getPrice(): int
     {
         return $this->price;
     }

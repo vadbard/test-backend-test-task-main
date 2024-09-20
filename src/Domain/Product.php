@@ -2,9 +2,9 @@
 
 declare(strict_types = 1);
 
-namespace Raketa\BackendTestTask\Repository\Entity;
+namespace Raketa\BackendTestTask\Domain;
 
-readonly class Product
+final readonly class Product
 {
     public function __construct(
         private int $id,
@@ -14,7 +14,7 @@ readonly class Product
         private string $name,
         private string $description,
         private string $thumbnail,
-        private float $price,
+        private int $price,
     ) {
     }
 
@@ -53,7 +53,7 @@ readonly class Product
         return $this->thumbnail;
     }
 
-    public function getPrice(): float
+    public function getPrice(): int
     {
         return $this->price;
     }

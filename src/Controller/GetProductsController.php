@@ -6,30 +6,24 @@ namespace Raketa\BackendTestTask\Controller;
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Raketa\BackendTestTask\View\ProductsView;
+use Raketa\BackendTestTask\UseCase\GetProducts\GetProductsUseCase;
+use Raketa\BackendTestTask\View\ProductListView;
 
-readonly class GetProductsController
+final readonly class GetProductsController extends AbstractJsonController
 {
     public function __construct(
-        private ProductsView $productsVew
+        private GetProductsUseCase $getProductsUseCase,
     ) {
     }
 
     public function get(RequestInterface $request): ResponseInterface
     {
-        $response = new JsonResponse();
+        $rawRequest = $this->jsonRequestBody($request);
 
-        $rawRequest = json_decode($request->getBody()->getContents(), true);
+        $arrayOfDtos = $this->getProductsUseCase->execute($rawRequest['category']);
 
-        $response->getBody()->write(
-            json_encode(
-                $this->productsVew->toArray($rawRequest['category']),
-                JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES
-            )
-        );
+        $view = new ProductListView($arrayOfDtos);
 
-        return $response
-            ->withHeader('Content-Type', 'application/json; charset=utf-8')
-            ->withStatus(200);
+        return $this->jsonResponseOk($view->toArray());
     }
 }
